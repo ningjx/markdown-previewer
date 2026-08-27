@@ -59,7 +59,7 @@ const markdown = [
   '    print("hi")',
   '```',
 ].join('\n');
-await page.fill('#editor', markdown);
+await page.evaluate((t) => window.__md.set(t), markdown);
 await page.waitForTimeout(700);
 
 const rendered = await page.evaluate(() => {
@@ -93,7 +93,7 @@ for (let attempt = 1; attempt <= 3 && math < 3; attempt++) {
     if (attempt < 3) {
       await page.reload({ waitUntil: 'networkidle' });
       await page.waitForTimeout(500);
-      await page.fill('#editor', markdown);
+      await page.evaluate((t) => window.__md.set(t), markdown);
       await page.waitForTimeout(600);
     }
   }
@@ -121,7 +121,7 @@ check('双击复位 50%', reset === '50%');
 
 await page.reload({ waitUntil: 'networkidle' });
 await page.waitForTimeout(400);
-const restored = await page.evaluate(() => document.getElementById('editor').value.includes('标题一'));
+const restored = await page.evaluate(() => window.__md.get().includes('标题一'));
 check('刷新后草稿恢复', restored);
 
 console.log(`\n结果: ${pass} 通过 / ${fail} 失败${errors.length ? '\nJS 错误: ' + errors.join(' | ') : ''}`);

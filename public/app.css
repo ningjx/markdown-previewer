@@ -91,6 +91,12 @@
   --shadow: rgba(31, 36, 32, 0.08);
   --danger: #b3402f;
   --danger-soft: rgba(179, 64, 47, 0.14);
+  --tok-string: #a25a31;
+  --tok-number: #a25a31;
+  --tok-comment: #8a938c;
+  --tok-attr: #5b6b8c;
+  --tok-var: #5b6b8c;
+  --tok-meta: #8a938c;
 
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Code",
     "SF Mono", Consolas, "Microsoft YaHei", "Noto Sans Mono CJK SC", monospace;
@@ -115,6 +121,12 @@
   --shadow: rgba(0, 0, 0, 0.4);
   --danger: #e06c5a;
   --danger-soft: rgba(224, 108, 90, 0.16);
+  --tok-string: #e0a458;
+  --tok-number: #e0a458;
+  --tok-comment: #7c8780;
+  --tok-attr: #8fa8cc;
+  --tok-var: #8fa8cc;
+  --tok-meta: #7c8780;
 }
 
 /* ---------- 基础 ---------- */
@@ -235,30 +247,100 @@ body {
   opacity: 1;
 }
 
+/* ---------- CodeMirror 编辑器（左栏） ---------- */
+
 #editor {
   flex: 1;
   min-height: 0;
   width: 100%;
-  resize: none;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--ink);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.cm-editor {
+  height: 100%;
+}
+
+.cm-editor.cm-focused {
+  outline: none;
+}
+
+.cm-scroller {
   font-family: var(--font-mono);
   font-size: 14px;
-  line-height: 22px; /* 与滚动同步的行高计算保持一致 */
-  padding: 18px 20px 40vh;
-  /* 默认自动换行（pre-wrap + break-word） */
-  white-space: pre-wrap;
-  overflow-wrap: break-word;
+  line-height: 22px; /* 与滚动同步的行定位保持一致 */
   overflow: auto;
+}
+
+.cm-content {
+  padding: 18px 20px 40vh;
   caret-color: var(--accent);
 }
 
-/* 关闭自动换行：长行横向滚动 */
-#editor.nowrap {
-  white-space: pre;
-  overflow-wrap: normal;
+.cm-cursor,
+.cm-dropCursor {
+  border-left-width: 2px;
+  border-left-color: var(--accent);
+}
+
+.cm-selectionBackground {
+  background: var(--selection) !important;
+}
+
+.cm-activeLine {
+  background: transparent;
+}
+
+.cm-placeholder {
+  color: var(--ink-3);
+}
+
+/* ---------- 编辑器 token 配色（CodeMirror .tok-*，随 data-theme 亮暗） ---------- */
+
+/* meta 放最前：markdown 的标题/强调标记会同时带 tok-meta，
+   后面的具体语义色（heading/strong/keyword…）需在同元素上赢过它 */
+.tok-meta {
+  color: var(--tok-meta);
+}
+.tok-keyword {
+  color: var(--accent);
+}
+.tok-string {
+  color: var(--tok-string);
+}
+.tok-number {
+  color: var(--tok-number);
+}
+.tok-comment {
+  color: var(--tok-comment);
+  font-style: italic;
+}
+.tok-type,
+.tok-func,
+.tok-tag,
+.tok-heading,
+.tok-link {
+  color: var(--accent-ink);
+}
+.tok-attr,
+.tok-var {
+  color: var(--tok-attr);
+}
+.tok-strong {
+  font-weight: 700;
+}
+.tok-em {
+  font-style: italic;
+}
+.tok-del {
+  color: var(--ink-3);
+}
+.tok-quote {
+  color: var(--ink-2);
+  font-style: italic;
+}
+.tok-code {
+  color: var(--ink-2);
 }
 
 #editor::placeholder {

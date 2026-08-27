@@ -72,7 +72,7 @@ MathJax.typesetPromise([previewDiv])   // 公式排版
 | Markdown 解析 | **markdown-it**（默认 preset） | 与参考页一致；默认 preset 已含 table、strikethrough 等格式化能力；`html: true` 复刻原生 HTML 兼容 |
 | 数学公式 | **MathJax 4** `tex-chtml.js` | 参考页用的 v3（含 `/es5`）已过时；v4 用 `mathjax@4/tex-chtml.js`，配置兼容，原生支持 `\(...\)`、`\[...\]`、`$...$`、`$$...$$` |
 | 代码高亮 | **highlight.js** | 在 markdown-it `highlight` 回调里返回 `hljs.highlight(code, {language}).value`；比 prism 接入更简单 |
-| 编辑器 | **原生 `<textarea>`** | 与参考页一致；零依赖、最省空间 |
+| 编辑器 | **CodeMirror 6** | 原生 `<textarea>` 无法彩色高亮；CodeMirror 6 支持 Markdown + 内嵌 HTML 语法高亮、fenced 代码块（JS/Python），轻量可打包 |
 | 样式 | 手写 CSS（无框架） | 极简，不用 antd（参考页用 antd 是因为它是标注工具） |
 | XSS 防护 | **默认关闭** | 见 §4.5 安全说明 |
 

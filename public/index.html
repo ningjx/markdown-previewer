@@ -45,15 +45,7 @@
         <button id="btnSync" type="button" class="tb-btn active" title="编辑与预览滚动同步（默认开）">滚动同步</button>
         <span id="tbStatus" aria-live="polite"></span>
       </div>
-      <textarea
-        id="editor"
-        wrap="off"
-        spellcheck="false"
-        autocomplete="off"
-        autocapitalize="off"
-        autocorrect="off"
-        placeholder="在这里书写 Markdown…&#10;&#10;原生 HTML（如 &lt;table&gt;&lt;tr&gt;&lt;td&gt;…&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;）与数学公式（\(E=mc^2\)、$x^2$、$$x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}$$）都会实时渲染。&#10;&#10;粘贴 HTML 后点上方「格式化」可自动排版。"
-      ></textarea>
+      <div id="editor" aria-label="编辑器"></div>
     </section>
 
     <div
