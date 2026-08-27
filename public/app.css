@@ -269,8 +269,11 @@ body {
   outline: none;
 }
 
-.cm-scroller {
+/* 用 #editor 提升优先级：CodeMirror 基础主题 .ͼ1 .cm-scroller 会注入
+   font-family: monospace（后加载且同权），必须压过它才能用到自托管等宽字体 */
+#editor .cm-scroller {
   font-family: var(--font-mono);
+  font-weight: 500; /* JetBrains Mono Variable 400→500，消除"发细"观感 */
   font-size: 14px;
   line-height: 22px; /* 与滚动同步的行定位保持一致 */
   overflow: auto;
@@ -308,6 +311,7 @@ body {
 }
 .tok-keyword {
   color: var(--tok-keyword);
+  font-weight: 600;
 }
 .tok-string {
   color: var(--tok-string);
@@ -545,6 +549,8 @@ body {
   background: none;
   padding: 0;
   font-size: 13px;
+  font-family: var(--font-mono); /* 浏览器默认 code{font:monospace} 会覆盖继承，需显式声明 */
+  font-weight: 500;
   color: var(--code-ink);
 }
 
