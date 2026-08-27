@@ -1,0 +1,25 @@
+{
+  "name": "md-editor-worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Worker Markdown 编辑器：左编辑右预览，原生 HTML + MathJax 数学公式 + 语法高亮 + 滚动同步 + 亮暗主题",
+  "scripts": {
+    "build": "node scripts/copy-fonts.mjs && esbuild src/app.js --bundle --minify --format=iife --target=es2020 --outfile=public/app.js",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "dependencies": {
+    "highlight.js": "^11.12.0",
+    "markdown-it": "^15.0.0"
+  },
+  "devDependencies": {
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "@fontsource-variable/source-serif-4": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "@fontsource/source-serif-4": "^5.3.0",
+    "esbuild": "^0.28.2",
+    "playwright-core": "^1.62.1",
+    "wrangler": "^4.126.0"
+  }
+}
