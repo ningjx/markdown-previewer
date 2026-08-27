@@ -482,27 +482,76 @@ function looksLikeHtml(src) {
   return /<[a-zA-Z][a-zA-Z0-9]*(\s|>)/.test(src);
 }
 
-// 把（通常是粘贴来的单行/乱缩进）HTML 重排为 2 空格缩进的多行结构
+// 容器标签：子内容换行并缩进（结构性布局标签）
+const CONTAINER_TAGS = new Set([
+  "html", "head", "body", "div", "section", "article", "aside", "header", "footer",
+  "main", "nav", "ul", "ol", "dl", "table", "thead", "tbody", "tfoot", "tr",
+  "colgroup", "form", "fieldset", "figure", "details",
+]);
+
+// 行级内容标签：自身从新行开始，内容与闭合标签保持同一行（<td>关联关系</td>）
+const LINE_TAGS = new Set([
+  "p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "td", "th", "dt", "dd",
+  "figcaption", "caption", "blockquote", "pre", "address", "summary",
+]);
+
+// 其余标签按内联处理（span/a/strong/em/br/img 等），跟随当前行不换行
+
+// 把（通常是粘贴来的单行/乱缩进）HTML 重排为 2 空格缩进的多行结构：
+// 容器标签独占一行并缩进子节点；行级标签(<td>/<p>/<li>…)与内容保持在同一行
 function formatHtml(src) {
   const tokens = src.match(/<\/?[^>]*>|[^<]+/g) || [];
   const lines = [];
   let depth = 0;
+  let current = ""; // 当前行缓冲
+
+  const tagName = (tok) => {
+    const m = tok.match(/^<\/?([a-zA-Z][a-zA-Z0-9]*)/);
+    return m ? m[1].toLowerCase() : null;
+  };
+  const flush = () => {
+    if (current) lines.push(current);
+    current = "";
+  };
+
   for (const tok of tokens) {
-    if (tok.startsWith("</")) {
-      depth = Math.max(0, depth - 1);
-      lines.push("  ".repeat(depth) + tok);
-    } else if (tok.startsWith("<")) {
-      const m = tok.match(/^<\/?([a-zA-Z][a-zA-Z0-9]*)/);
-      const tag = m ? m[1].toLowerCase() : null;
-      lines.push("  ".repeat(depth) + tok);
-      // 自闭合 / 空元素不增加层级
-      if (tag && !VOID_TAGS.has(tag) && !/\/\s*>$/.test(tok)) depth++;
+    if (tok.startsWith("<")) {
+      const tag = tagName(tok);
+      const closing = tok.startsWith("</");
+      const isContainer = tag && CONTAINER_TAGS.has(tag);
+      const isLine = tag && LINE_TAGS.has(tag);
+      const selfClosed = /\/\s*>$/.test(tok) || (tag && VOID_TAGS.has(tag));
+
+      if (closing) {
+        if (isContainer) {
+          // 容器闭合：换行 + 回退缩进 + 独占一行
+          flush();
+          depth = Math.max(0, depth - 1);
+          lines.push("  ".repeat(depth) + tok);
+        } else {
+          // 行级/内联闭合：紧跟当前行；行级标签闭合时缩进回退
+          if (isLine) depth = Math.max(0, depth - 1);
+          if (!current) current = "  ".repeat(depth);
+          current += tok;
+        }
+      } else {
+        // 开启标签：块级/行级先落盘当前行，再开新行
+        if (current && (isContainer || isLine)) {
+          flush();
+        }
+        if (!current) current = "  ".repeat(depth);
+        current += tok;
+        if (!selfClosed) depth++;
+      }
     } else {
-      // 标签之间的文本：压平多余空白，保留换行
+      // 标签之间的文本：压平多余空白，追加到当前行
       const text = tok.replace(/\s+/g, " ").trim();
-      if (text) lines.push("  ".repeat(depth) + text);
+      if (!text) continue;
+      if (!current) current = "  ".repeat(depth);
+      current += text;
     }
   }
+  flush();
   return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim() + "\n";
 }
 
