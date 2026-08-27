@@ -426,10 +426,10 @@ body {
 #preview {
   position: relative; /* 作为 .line 锚点的 offsetParent，供滚动同步定位 */
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: auto; /* 允许横向溢出（宽表格/超宽代码），滚轮或抓手平移 */
   padding: 18px 22px 40vh;
   tab-size: 4;
+  cursor: grab;
 }
 
 #preview:empty::before {
@@ -559,8 +559,7 @@ body {
   margin: 0.9em 0;
   max-width: 100%;
   font-size: 0.95em;
-  display: block;
-  overflow-x: auto;
+  display: block; /* 按内容宽度展开；不再自滚动，宽表格溢出交给 #preview 统一横向滚动/平移 */
 }
 
 .markdown-body th,
@@ -608,6 +607,17 @@ body {
 .markdown-body input[type="checkbox"] {
   accent-color: var(--accent);
   margin-right: 0.4em;
+}
+
+/* 预览区：文字元素保持文本光标（可选中），背景/结构区显示抓手（可拖动平移）
+   注意 a 保持 pointer（链接手型），code/span/em 等内联元素继承所在块的光标 */
+#preview :is(p, li, td, th, h1, h2, h3, h4, h5, h6, blockquote, pre, caption) {
+  cursor: text;
+}
+
+#preview.panning,
+#preview.panning * {
+  cursor: grabbing !important;
 }
 
 /* ---------- 代码高亮 token 配色（预览 .hljs） ----------

@@ -226,6 +226,48 @@ divider.addEventListener("dblclick", () => {
 });
 
 /* ============================================================
+ * 预览抓手平移：鼠标按住背景/空处拖动可平移预览（水平/垂直）
+ * 文字上保持默认（可选中/复制），滚轮滚动不受影响；触屏仍原生滚动
+ * ============================================================ */
+
+// 判定"文字元素"的选择器：在这些元素上不启动平移，交给默认选择行为
+const PAN_TEXT = "p, li, td, th, h1, h2, h3, h4, h5, h6, blockquote, pre, caption";
+let panning = false;
+let panStart = { x: 0, y: 0, sl: 0, st: 0 };
+
+preview.addEventListener("pointerdown", (e) => {
+  if (e.pointerType !== "mouse" || e.button !== 0) return;
+  const target = document.elementFromPoint(e.clientX, e.clientY);
+  // 点在文字元素上：不抢事件，文字可选中；落在背景/结构区：进入平移
+  if (target && target !== preview && target.closest(PAN_TEXT)) return;
+  panning = true;
+  preview.classList.add("panning");
+  try {
+    preview.setPointerCapture(e.pointerId);
+  } catch (_) {}
+  panStart = { x: e.clientX, y: e.clientY, sl: preview.scrollLeft, st: preview.scrollTop };
+  e.preventDefault();
+});
+
+preview.addEventListener("pointermove", (e) => {
+  if (!panning) return;
+  preview.scrollLeft = panStart.sl - (e.clientX - panStart.x);
+  preview.scrollTop = panStart.st - (e.clientY - panStart.y);
+});
+
+function endPreviewPan(e) {
+  if (!panning) return;
+  panning = false;
+  preview.classList.remove("panning");
+  try {
+    preview.releasePointerCapture(e.pointerId);
+  } catch (_) {}
+}
+
+preview.addEventListener("pointerup", endPreviewPan);
+preview.addEventListener("pointercancel", endPreviewPan);
+
+/* ============================================================
  * CodeMirror 编辑器
  * ============================================================ */
 
