@@ -104,7 +104,7 @@ else {
   pass++;
 }
 
-await page.click('#themeToggle');
+await page.click('#btnTheme');
 const dark = await page.evaluate(() => document.documentElement.dataset.theme === 'dark');
 check('主题切换 → dark', dark);
 

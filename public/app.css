@@ -89,6 +89,8 @@
   --code-ink: #2a2f2a;
   --selection: rgba(14, 122, 94, 0.18);
   --shadow: rgba(31, 36, 32, 0.08);
+  --danger: #b3402f;
+  --danger-soft: rgba(179, 64, 47, 0.14);
 
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "Cascadia Code",
     "SF Mono", Consolas, "Microsoft YaHei", "Noto Sans Mono CJK SC", monospace;
@@ -111,6 +113,8 @@
   --code-ink: #e4e8e3;
   --selection: rgba(52, 211, 166, 0.22);
   --shadow: rgba(0, 0, 0, 0.4);
+  --danger: #e06c5a;
+  --danger-soft: rgba(224, 108, 90, 0.16);
 }
 
 /* ---------- 基础 ---------- */
@@ -202,6 +206,20 @@ body {
 
 .tb-btn:active {
   transform: translateY(1px);
+}
+
+.tb-btn.danger {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--danger-soft);
+}
+
+/* 工具条分组分隔线 */
+.tb-sep {
+  width: 1px;
+  height: 14px;
+  background: var(--hairline);
+  margin: 0 2px;
 }
 
 #tbStatus {
@@ -583,52 +601,6 @@ body {
 :root[data-theme="dark"] .markdown-body .hljs-property,
 :root[data-theme="dark"] .markdown-body .hljs-selector-attr {
   color: #8fa8cc;
-}
-
-/* ---------- 主题切换按钮（停靠在分隔缝底部） ---------- */
-
-#themeToggle {
-  position: fixed;
-  bottom: 14px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--hairline);
-  background: var(--surface);
-  color: var(--ink-2);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  opacity: 0.55;
-  box-shadow: 0 1px 4px var(--shadow);
-  transition: opacity 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-#themeToggle:hover {
-  opacity: 1;
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-#themeToggle svg {
-  width: 16px;
-  height: 16px;
-}
-
-#iconSun {
-  display: none;
-}
-#iconMoon {
-  display: block;
-}
-:root[data-theme="dark"] #iconSun {
-  display: block;
-}
-:root[data-theme="dark"] #iconMoon {
-  display: none;
 }
 
 /* ---------- 滚动条 ---------- */

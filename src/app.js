@@ -81,7 +81,7 @@ const app = document.getElementById("app");
 const editor = document.getElementById("editor");
 const preview = document.getElementById("preview");
 const divider = document.getElementById("divider");
-const themeToggle = document.getElementById("themeToggle");
+const btnTheme = document.getElementById("btnTheme");
 
 /* ============================================================
  * 「格式化」按钮：HTML → 缩进美化；纯文本 → 清理多余空白
@@ -235,6 +235,65 @@ btnPaste.addEventListener("click", async () => {
   render();
   flashStatus("已替换为剪贴板内容");
 });
+
+/* ============================================================
+ * 清空：清掉编辑区内容 + 已保存草稿（二次确认防误点）
+ * ============================================================ */
+
+const btnClear = document.getElementById("btnClear");
+let clearArmed = false;
+let clearTimer = null;
+
+btnClear.addEventListener("click", () => {
+  if (!clearArmed) {
+    // 第一次点击：进入待确认状态，2.5s 内再点一次才真正清空
+    clearArmed = true;
+    btnClear.textContent = "确认清空？";
+    btnClear.classList.add("danger");
+    clearTimeout(clearTimer);
+    clearTimer = setTimeout(() => {
+      clearArmed = false;
+      btnClear.textContent = "清空";
+      btnClear.classList.remove("danger");
+    }, 2500);
+    return;
+  }
+  clearArmed = false;
+  clearTimeout(clearTimer);
+  btnClear.textContent = "清空";
+  btnClear.classList.remove("danger");
+  editor.value = "";
+  saveDraft();
+  render();
+  flashStatus("已清空");
+});
+
+/* ============================================================
+ * 滚动同步开关（默认开，记忆选择）
+ * ============================================================ */
+
+const SYNC_KEY = "md-editor.sync";
+let syncOn = true;
+try {
+  syncOn = localStorage.getItem(SYNC_KEY) !== "0";
+} catch (_) {}
+
+const btnSync = document.getElementById("btnSync");
+
+function applySync() {
+  btnSync.classList.toggle("active", syncOn);
+  btnSync.setAttribute("aria-pressed", String(syncOn));
+}
+
+btnSync.addEventListener("click", () => {
+  syncOn = !syncOn;
+  applySync();
+  try {
+    localStorage.setItem(SYNC_KEY, syncOn ? "1" : "0");
+  } catch (_) {}
+});
+
+applySync();
 
 /* ============================================================
  * 渲染 + 公式排版
@@ -406,7 +465,7 @@ function syncPreviewToEditor() {
 
 // syncing 标志阻断"程序滚动 → scroll 事件 → 反向程序滚动"的反馈环
 editor.addEventListener("scroll", () => {
-  if (syncing) return;
+  if (syncing || !syncOn) return;
   syncing = true;
   syncEditorToPreview();
   requestAnimationFrame(() => {
@@ -415,7 +474,7 @@ editor.addEventListener("scroll", () => {
 });
 
 preview.addEventListener("scroll", () => {
-  if (syncing) return;
+  if (syncing || !syncOn) return;
   syncing = true;
   syncPreviewToEditor();
   requestAnimationFrame(() => {
@@ -430,7 +489,7 @@ preview.addEventListener("scroll", () => {
 
 const THEME_KEY = "md-editor.theme";
 
-themeToggle.addEventListener("click", () => {
+btnTheme.addEventListener("click", () => {
   const next = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
   document.documentElement.dataset.theme = next;
   try {

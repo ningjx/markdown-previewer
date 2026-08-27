@@ -36,8 +36,13 @@
       <div id="toolbar" role="toolbar" aria-label="编辑工具">
         <button id="btnFormat" type="button" class="tb-btn" title="美化 HTML 缩进；无 HTML 时清理多余空白">格式化</button>
         <button id="btnWrap" type="button" class="tb-btn active" title="自动换行（默认开）；关闭后长行横向滚动">自动换行</button>
+        <span class="tb-sep" aria-hidden="true"></span>
         <button id="btnCopy" type="button" class="tb-btn" title="复制编辑器的全部内容到剪贴板">复制</button>
         <button id="btnPaste" type="button" class="tb-btn" title="把剪贴板内容粘贴进来，替换（清空）编辑区当前内容">粘贴</button>
+        <button id="btnClear" type="button" class="tb-btn" title="清空编辑区并删除已保存的草稿（需二次确认）">清空</button>
+        <span class="tb-sep" aria-hidden="true"></span>
+        <button id="btnTheme" type="button" class="tb-btn" title="切换亮暗主题">主题</button>
+        <button id="btnSync" type="button" class="tb-btn active" title="编辑与预览滚动同步（默认开）">滚动同步</button>
         <span id="tbStatus" aria-live="polite"></span>
       </div>
       <textarea
@@ -64,16 +69,6 @@
     <section id="previewPane" aria-label="预览">
       <article id="preview" class="markdown-body"></article>
     </section>
-
-    <button id="themeToggle" type="button" aria-label="切换亮暗主题" title="切换亮暗主题">
-      <svg id="iconMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M20.4 14.1A8.5 8.5 0 0 1 9.9 3.6a8.5 8.5 0 1 0 10.5 10.5Z" />
-      </svg>
-      <svg id="iconSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <circle cx="12" cy="12" r="4.2" />
-        <path d="M12 2.5v2M12 19.5v2M4.34 4.34l1.42 1.42M18.24 18.24l1.42 1.42M2.5 12h2M19.5 12h2M4.34 19.66l1.42-1.42M18.24 5.76l1.42-1.42" />
-      </svg>
-    </button>
   </main>
 
   <script src="/app.js"></script>
