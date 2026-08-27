@@ -213,6 +213,30 @@ btnCopy.addEventListener("click", async () => {
 });
 
 /* ============================================================
+ * 粘贴：读取剪贴板并替换（清空）编辑区内容
+ * ============================================================ */
+
+const btnPaste = document.getElementById("btnPaste");
+
+btnPaste.addEventListener("click", async () => {
+  let text = "";
+  try {
+    text = await navigator.clipboard.readText();
+  } catch (_) {
+    flashStatus("无法读取剪贴板（权限或浏览器限制），请 Ctrl+V 粘贴");
+    return;
+  }
+  if (!text) {
+    flashStatus("剪贴板是空的");
+    return;
+  }
+  editor.value = text;
+  saveDraft();
+  render();
+  flashStatus("已替换为剪贴板内容");
+});
+
+/* ============================================================
  * 渲染 + 公式排版
  * ============================================================ */
 
