@@ -244,7 +244,7 @@ const editorHighlighter = HighlightStyle.define([
   { tag: [tags.typeName, tags.className, tags.namespace], class: "tok-type" },
   { tag: [tags.propertyName, tags.attributeName], class: "tok-attr" },
   { tag: tags.function(tags.variableName), class: "tok-func" },
-  { tag: tags.tagName, class: "tok-tag" },
+  { tag: [tags.tagName, tags.angleBracket], class: "tok-tag" },
   { tag: [tags.variableName, tags.definition(tags.variableName)], class: "tok-var" },
   { tag: tags.strong, class: "tok-strong" },
   { tag: tags.emphasis, class: "tok-em" },
