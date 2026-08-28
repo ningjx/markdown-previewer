@@ -129,6 +129,7 @@ const btnTheme = document.getElementById("btnTheme");
 
 function render() {
   preview.innerHTML = renderDoc(getValue());
+  refreshLineAnchors();
   typeset();
 }
 
@@ -369,12 +370,16 @@ function createEditor(initialDoc) {
 
 let syncing = false;
 
-const lineHeight = 22; // 与 CSS 中 .cm-scroller 的 line-height 一致（仅供预览侧参考）
+// 预览中的 data-line 锚点列表缓存：render 时重建，滚动同步不再每次 querySelectorAll
+let lineAnchors = [];
+function refreshLineAnchors() {
+  lineAnchors = Array.from(preview.querySelectorAll("[data-line]"));
+}
 
 // 找到源行号 ≤ line 的最后一个锚点元素（预览中最近的对应位置）
 function previewAnchorAt(line) {
   let best = null;
-  for (const el of preview.querySelectorAll("[data-line]")) {
+  for (const el of lineAnchors) {
     const n = parseInt(el.dataset.line, 10);
     if (n <= line) best = el;
     else break;
@@ -382,32 +387,124 @@ function previewAnchorAt(line) {
   return best;
 }
 
+// 找到源行号 > line 的第一个锚点元素（当前锚点的下一锚点）
+function previewAnchorAfter(line) {
+  for (const el of lineAnchors) {
+    const n = parseInt(el.dataset.line, 10);
+    if (n > line) return el;
+  }
+  return null;
+}
+
+// CodeMirror 当前实际单行高（字体加载后可能变化，不硬编码）
+function singleLineHeight() {
+  return (view && view.defaultLineHeight) || 22;
+}
+
+// 比例映射兜底：编辑区 / 预览按各自滚动范围同比映射。
+// 用于没有 data-line 锚点的内容（纯 HTML、整段单行 HTML 表格等），保证仍能双向联动。
+function proportionalEditorToPreview() {
+  const maxE = view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight;
+  const maxP = preview.scrollHeight - preview.clientHeight;
+  if (maxE <= 0 || maxP <= 0) return;
+  const target = (view.scrollDOM.scrollTop / maxE) * maxP;
+  if (Math.abs(preview.scrollTop - target) > 2) {
+    preview.scrollTop = target;
+  }
+}
+function proportionalPreviewToEditor() {
+  const maxE = view.scrollDOM.scrollHeight - view.scrollDOM.clientHeight;
+  const maxP = preview.scrollHeight - preview.clientHeight;
+  if (maxE <= 0 || maxP <= 0) return;
+  const target = (preview.scrollTop / maxP) * maxE;
+  if (Math.abs(view.scrollDOM.scrollTop - target) > 2) {
+    view.scrollDOM.scrollTop = target;
+  }
+}
+
 function syncEditorToPreview() {
+  // 无锚点内容（纯 HTML 等）→ 比例映射
+  if (lineAnchors.length === 0) {
+    proportionalEditorToPreview();
+    return;
+  }
   // CodeMirror 视口顶部可视行（自动换行时也是正确的视觉行）
   const block = view.lineBlockAtHeight(view.scrollDOM.scrollTop);
   const lineNo = view.state.doc.lineAt(block.from).number; // 1 基源行号
   const anchor = previewAnchorAt(lineNo - 1);
   if (!anchor) return;
-  const target = anchor.offsetTop - preview.clientHeight * 0.15;
+  let target = anchor.offsetTop - preview.clientHeight * 0.15;
+  // 当前源行被软换行成多个可视行时，锚点只落在行首；按可视进度在本锚点与
+  // 下一锚点之间线性插值，否则滚进超长行中部时预览会一直停在行首。
+  if (block.height > singleLineHeight() * 1.5) {
+    const next = previewAnchorAfter(lineNo - 1);
+    if (next && next !== anchor) {
+      const progress = (view.scrollDOM.scrollTop - block.top) / block.height;
+      target = anchor.offsetTop + (next.offsetTop - anchor.offsetTop) * progress - preview.clientHeight * 0.15;
+    }
+  }
   if (Math.abs(preview.scrollTop - target) > 2) {
     preview.scrollTop = target;
   }
 }
 
 function syncPreviewToEditor() {
+  // 无锚点内容（纯 HTML 等）→ 比例映射
+  if (lineAnchors.length === 0) {
+    proportionalPreviewToEditor();
+    return;
+  }
   let line = null;
-  for (const el of preview.querySelectorAll("[data-line]")) {
+  let prevAnchor = null;
+  let curAnchor = null;
+  for (const el of lineAnchors) {
     if (el.offsetTop >= preview.scrollTop) {
+      curAnchor = el;
       line = parseInt(el.dataset.line, 10);
       break;
     }
+    prevAnchor = el;
   }
   if (line == null) return;
   if (line < 0 || line >= view.state.doc.lines) return;
+  // 预览停留在上一锚点与当前锚点之间（超长段落中部）：按预览进度插值编辑区位置，
+  // 避免预览刚滚进超长块就跳到该块之后的下一行。
+  if (prevAnchor && curAnchor && curAnchor.offsetTop - prevAnchor.offsetTop > singleLineHeight() * 1.5) {
+    const prevLine = parseInt(prevAnchor.dataset.line, 10);
+    if (prevLine >= 0 && prevLine < view.state.doc.lines) {
+      const progress = (preview.scrollTop - prevAnchor.offsetTop) / (curAnchor.offsetTop - prevAnchor.offsetTop);
+      const fromTop = view.lineBlockAt(view.state.doc.line(prevLine + 1).from).top;
+      const toTop = view.lineBlockAt(view.state.doc.line(line + 1).from).top;
+      const target = fromTop + (toTop - fromTop) * Math.min(1, Math.max(0, progress));
+      if (Math.abs(view.scrollDOM.scrollTop - target) > 2) {
+        view.scrollDOM.scrollTop = target;
+      }
+      return;
+    }
+  }
   const docLine = view.state.doc.line(line + 1); // data-line 是 0 基，doc.line 是 1 基
   const block = view.lineBlockAt(docLine.from);
   if (Math.abs(view.scrollDOM.scrollTop - block.top) > 2) {
     view.scrollDOM.scrollTop = block.top;
+  }
+}
+
+// 统一的同步守卫：开关关闭或正在互滚时直接跳过；执行同步时先置位 syncing，
+// 用 rAF 在下一帧复位以阻断"程序滚动 → scroll 事件 → 反向程序滚动"的反馈环。
+// finally + setTimeout 兜底保证任何情况下（同步逻辑抛错、页面被节流/切后台）
+// syncing 都能复位，不会卡死在 true 导致双向都失效。
+function guardScrollSync(fn) {
+  if (syncing || !syncOn) return;
+  syncing = true;
+  try {
+    fn();
+  } finally {
+    requestAnimationFrame(() => {
+      syncing = false;
+    });
+    setTimeout(() => {
+      syncing = false;
+    }, 200);
   }
 }
 
@@ -721,22 +818,12 @@ render();
 
 // 编辑器滚动联动（等 view 创建后再挂）
 view.scrollDOM.addEventListener("scroll", () => {
-  if (syncing || !syncOn) return;
-  syncing = true;
-  syncEditorToPreview();
-  requestAnimationFrame(() => {
-    syncing = false;
-  });
+  guardScrollSync(syncEditorToPreview);
 });
 
 // 预览滚动联动：// syncing 标志阻断"程序滚动 → scroll 事件 → 反向程序滚动"的反馈环
 preview.addEventListener("scroll", () => {
-  if (syncing || !syncOn) return;
-  syncing = true;
-  syncPreviewToEditor();
-  requestAnimationFrame(() => {
-    syncing = false;
-  });
+  guardScrollSync(syncPreviewToEditor);
 });
 
 // MathJax 兜底：若初次渲染时 CDN 尚未就绪，等就绪后补排版一次，
